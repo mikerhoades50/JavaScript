@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>20 × 20 Tic Tac Toe</title>
+  <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #111;
+      color: #eee;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 20px;
+    }
+    h1 {
+      margin: 10px;
+      color: #4fc3f7;
+    }
+    #status {
+      font-size: 1.4rem;
+      margin: 10px 0 20px;
+      min-height: 2rem;
+    }
+    #board {
+      display: grid;
+      grid-template-columns: repeat(20, 34px);
+      grid-gap: 2px;
+      background: #222;
+      padding: 8px;
+      border-radius: 8px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.7);
+    }
+    .cell {
+      width: 34px;
+      height: 34px;
+      background: #333;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.12s;
+    }
+    .cell:hover {
+      background: #444;
+    }
+    .cell.X { color: #f44336; background: #2d1a1a; }
+    .cell.O { color: #4fc3f7; background: #1a2a3a; }
+    .cell.winner {
+      background: #ffeb3b !important;
+      color: #000;
+      animation: pulse 1.2s infinite alternate;
+    }
+    @keyframes pulse {
+      from { transform: scale(1);   }
+      to   { transform: scale(1.12); }
+    }
+    button {
+      margin-top: 25px;
+      padding: 12px 28px;
+      font-size: 1.1rem;
+      background: #555;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #777;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>20 × 20 Tic-Tac-Toe</h1>
+  <div id="status">Player X starts</div>
+  <div id="board"></div>
+  <button onclick="resetGame()">New Game</button>
+
+  <script>
+    const SIZE = 20;
+    const WIN_LENGTH = 5;   // ← change to 4 or 6 or whatever you prefer
+
+    let board = Array(SIZE * SIZE).fill(null);
+    let currentPlayer = 'X';
+    let gameOver = false;
+
+    const status = document.getElementById('status');
+    const boardEl = document.getElementById('board');
+
+    function initBoard() {
+      boardEl.innerHTML = '';
+      board = Array(SIZE * SIZE).fill(null);
+      currentPlayer = 'X';
+      gameOver = false;
+      status.textContent = "Player X starts";
+
+      for (let i = 0; i < SIZE * SIZE; i++) {
+        const cell = document.createElement('div');
+        cell.classList.add('cell');
+        cell.dataset.index = i;
+        cell.addEventListener('click', handleClick);
+        boardEl.appendChild(cell);
+      }
+    }
+
+    function handleClick(e) {
+      if (gameOver) return;
+
+      const idx = Number(e.target.dataset.index);
+      if (board[idx] !== null) return;
+
+      board[idx] = currentPlayer;
+      e.target.textContent = currentPlayer;
+      e.target.classList.add(currentPlayer);
+
+      if (checkWin(idx)) {
+        status.textContent = `Player ${currentPlayer} wins!`;
+        highlightWinningLine(idx);
+        gameOver = true;
+        return;
+      }
+
+      if (!board.includes(null)) {
+        status.textContent = "It's a draw!";
+        gameOver = true;
+        return;
+      }
+
+      currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+      status.textContent = `Player ${currentPlayer}'s turn`;
+    }
+
+    function checkWin(lastMoveIndex) {
+      const row = Math.floor(lastMoveIndex / SIZE);
+      const col = lastMoveIndex % SIZE;
+      const player = board[lastMoveIndex];
+
+      // directions: right, down, down-right, down-left
+      const directions = [
+        [0, 1],   // →
+        [1, 0],   // ↓
+        [1, 1],   // ↘
+        [1, -1]   // ↙
+      ];
+
+      for (const [dr, dc] of directions) {
+        let count = 1;
+
+        // forward
+        for (let step = 1; step < WIN_LENGTH; step++) {
+          const r = row + dr * step;
+          const c = col + dc * step;
+          if (r < 0 || r >= SIZE || c < 0 || c >= SIZE) break;
+          if (board[r * SIZE + c] !== player) break;
+          count++;
+        }
+
+        // backward
+        for (let step = 1; step < WIN_LENGTH; step++) {
+          const r = row - dr * step;
+          const c = col - dc * step;
+          if (r < 0 || r >= SIZE || c < 0 || c >= SIZE) break;
+          if (board[r * SIZE + c] !== player) break;
+          count++;
+        }
+
+        if (count >= WIN_LENGTH) return true;
+      }
+      return false;
+    }
+
+    function highlightWinningLine(lastMoveIndex) {
+      // Simple version: just highlight the last clicked cell
+      // (finding the full line is more code — left as exercise if you want)
+      const cell = boardEl.children[lastMoveIndex];
+      cell.classList.add('winner');
+    }
+
+    function resetGame() {
+      initBoard();
+    }
+
+    // Start game
+    initBoard();
+  </script>
+
+</body>
+</html>

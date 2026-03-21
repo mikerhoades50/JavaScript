@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Basic Draw – Click & Drag</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #f8f9fa;
+      font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h2 { margin: 10px 0 15px; }
+    #controls {
+      background: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 15px;
+      display: flex;
+      gap: 25px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    canvas {
+      background: #ffffff;
+      border: 2px solid #444;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      cursor: crosshair;
+      touch-action: none;
+    }
+    button {
+      padding: 8px 16px;
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover { background: #c82333; }
+  </style>
+</head>
+<body>
+
+  <h2>Click and drag to draw</h2>
+
+  <div id="controls">
+    <div>
+      <label>Color: </label>
+      <input type="color" id="color" value="#000000">
+    </div>
+    <div>
+      <label>Size: </label>
+      <input type="range" id="size" min="1" max="40" value="5">
+      <span id="sizeDisplay">5</span>
+    </div>
+    <button id="clear">Clear</button>
+  </div>
+
+  <canvas id="canvas" width="800" height="500"></canvas>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Basic drawing settings
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    let isDrawing = false;
+    let lastX = 0;
+    let lastY = 0;
+
+    const colorInput   = document.getElementById('color');
+    const sizeInput    = document.getElementById('size');
+    const sizeDisplay  = document.getElementById('sizeDisplay');
+    const clearButton  = document.getElementById('clear');
+
+    // Update size display
+    sizeInput.addEventListener('input', () => {
+      sizeDisplay.textContent = sizeInput.value;
+    });
+
+    function getPointerPosition(e) {
+      const rect = canvas.getBoundingClientRect();
+      let clientX, clientY;
+
+      if (e.touches && e.touches.length > 0) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else {
+        clientX = e.clientX;
+        clientY = e.clientY;
+      }
+
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
+    }
+
+    function startDrawing(e) {
+      isDrawing = true;
+      const pos = getPointerPosition(e);
+      lastX = pos.x;
+      lastY = pos.y;
+
+      // Optional: draw a dot on click (helps see single clicks)
+      ctx.fillStyle = colorInput.value;
+      ctx.beginPath();
+      ctx.arc(lastX, lastY, sizeInput.value / 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function draw(e) {
+      if (!isDrawing) return;
+      e.preventDefault(); // prevent scrolling on touch devices
+
+      const pos = getPointerPosition(e);
+
+      ctx.strokeStyle = colorInput.value;
+      ctx.lineWidth   = sizeInput.value;
+
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+
+      lastX = pos.x;
+      lastY = pos.y;
+    }
+
+    function stopDrawing() {
+      isDrawing = false;
+    }
+
+    // ─── Mouse events ───────────────────────────────────────
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup',   stopDrawing);
+    canvas.addEventListener('mouseleave', stopDrawing);
+
+    // ─── Touch events ───────────────────────────────────────
+    canvas.addEventListener('touchstart', startDrawing);
+    canvas.addEventListener('touchmove',  draw);
+    canvas.addEventListener('touchend',   stopDrawing);
+    canvas.addEventListener('touchcancel', stopDrawing);
+
+    // Clear canvas
+    clearButton.addEventListener('click', () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
+  </script>
+
+</body>
+</html>
