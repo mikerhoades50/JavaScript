@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Batch Weight Calculator</title>
+  <style>
+    :root {
+      --primary:    #3b82f6;
+      --primary-dark:#2563eb;
+      --success:    #10b981;
+      --warning:    #f59e0b;
+      --danger:     #ef4444;
+      --gray-100:   #f3f4f6;
+      --gray-200:   #e5e7eb;
+      --gray-300:   #d1d5db;
+      --gray-600:   #4b5563;
+      --gray-800:   #1f2937;
+      --shadow-sm:  0 1px 3px rgba(0,0,0,0.1);
+      --shadow-md:  0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--gray-100);
+      color: var(--gray-800);
+      margin: 0;
+      padding: 24px 16px;
+      line-height: 1.5;
+    }
+
+    .container { max-width: 960px; margin: 0 auto; }
+
+    h1, h2 {
+      color: var(--gray-800);
+      margin-top: 0;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .header h1 {
+      margin-bottom: 16px;
+      font-size: 1.9rem;
+    }
+
+    .machine-select-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: white;
+      padding: 12px 20px;
+      border-radius: 12px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    label[for="machineSize"] {
+      font-weight: 600;
+      color: var(--gray-600);
+      white-space: nowrap;
+    }
+
+    select {
+      padding: 10px 16px;
+      font-size: 1.1rem;
+      border: 1px solid var(--gray-300);
+      border-radius: 8px;
+      background: white;
+      min-width: 220px;
+      cursor: pointer;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      margin-bottom: 32px;
+    }
+
+    th, td {
+      padding: 14px 12px;
+      text-align: right;
+    }
+
+    th {
+      background: var(--primary);
+      color: white;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    td {
+      border-bottom: 1px solid var(--gray-200);
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    .total-row td {
+      background: #eff6ff;
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 1.05rem;
+      text-align: right;
+      border: 1px solid var(--gray-300);
+      border-radius: 6px;
+      transition: all 0.15s;
+    }
+
+    input[type="number"]:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+
+    .summary-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      justify-content: center;
+      margin: 32px 0;
+    }
+
+    .summary-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px 28px;
+      min-width: 260px;
+      box-shadow: var(--shadow-sm);
+      text-align: center;
+      font-size: 1.15rem;
+      font-weight: 600;
+    }
+
+    .summary-card.water { border-left: 5px solid var(--success); }
+    .summary-card.food  { border-left: 5px solid var(--primary); }
+
+    .summary-card.positive { color: var(--success); }
+    .summary-card.negative { color: var(--danger); }
+
+    .per-bag-section {
+      background: white;
+      border-radius: 12px;
+      padding: 28px;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 32px;
+      justify-content: center;
+      align-items: flex-end;
+    }
+
+    .bags-input-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .bags-input-group label {
+      font-weight: 600;
+      color: var(--gray-600);
+    }
+
+    #bagsInput {
+      width: 140px;
+      font-size: 1.4rem;
+      text-align: center;
+      padding: 12px;
+    }
+
+    .per-bag-result {
+      font-size: 1.35rem;
+      font-weight: 700;
+      padding: 14px 24px;
+      border-radius: 10px;
+      min-width: 240px;
+      text-align: center;
+      background: #f8fafc;
+      border: 1px solid var(--gray-200);
+    }
+
+    .per-bag-result.water { border-color: var(--success); color: var(--success); }
+    .per-bag-result.oz     { border-color: #60a5fa; color: #1d4ed8; }
+
+    @media (max-width: 640px) {
+      .per-bag-section { flex-direction: column; align-items: center; }
+      .summary-container { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="header">
+    <h1>Batch Weight Calculator</h1>
+    <div class="machine-select-group">
+      <label for="machineSize">Machine Size:</label>
+      <select id="machineSize">
+        <option value="small">Small</option>
+        <option value="medium">Medium</option>
+        <option value="large" selected>Large</option>
+        <option value="xl">Extra Large</option>
+      </select>
+    </div>
+  </div>
+
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th>Weight Before</th>
+        <th>Weight After</th>
+        <th>Food Weight</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+    <tfoot>
+      <tr class="total-row">
+        <td>Total Before: <span id="totalA">0.00</span> g</td>
+        <td>Total After: <span id="totalB">0.00</span> g</td>
+        <td>Total Food: <span id="totalC">0.00</span> g</td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <div class="summary-container">
+    <div class="summary-card water" id="waterBox">
+      Water Weight (Before − After): <span id="waterWeight">0.00</span> g
+    </div>
+    <div class="summary-card food" id="foodBox">
+      Food Weight: <span id="foodWeight">0.00</span> g
+    </div>
+  </div>
+
+  <div class="per-bag-section">
+    <div class="bags-input-group">
+      <label for="bagsInput">Number of Bags</label>
+      <input type="number" id="bagsInput" min="0" step="1" value="25">
+    </div>
+
+    <div class="per-bag-result" id="foodPerBag">Food per Bag: 0.00 g</div>
+    <div class="per-bag-result water" id="waterPerBag">Water per Bag: 0.00 g</div>
+    <div class="per-bag-result oz" id="waterOz">Water in oz: 0.00 oz</div>
+  </div>
+
+</div>
+
+<script>
+  const machineSizeSelect = document.getElementById('machineSize');
+  const tableBody = document.getElementById('tableBody');
+  const bagsInput = document.getElementById('bagsInput');
+
+  const sizeConfig = {
+    small:   { rows: 4,  bags: 10 },
+    medium:  { rows: 5,  bags: 15 },
+    large:   { rows: 6,  bags: 25 },
+    xl:      { rows: 7,  bags: 35 }
+  };
+
+  function getCurrentValues() {
+    return {
+      colA: Array.from(document.querySelectorAll('.col-a')).map(el => el.value),
+      colB: Array.from(document.querySelectorAll('.col-b')).map(el => el.value),
+      colC: Array.from(document.querySelectorAll('.col-c')).map(el => el.value)
+    };
+  }
+
+  function createRows(count, prevA = [], prevB = [], prevC = []) {
+    tableBody.innerHTML = '';
+
+    for (let i = 0; i < count; i++) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input type="number" class="col-a" step="any" placeholder="0" value="${prevA[i] ?? ''}"></td>
+        <td><input type="number" class="col-b" step="any" placeholder="0" value="${prevB[i] ?? ''}"></td>
+        <td><input type="number" class="col-c" step="any" placeholder="0" value="${prevC[i] ?? ''}"></td>
+      `;
+      tableBody.appendChild(tr);
+    }
+
+    attachInputListeners();
+    updateTotals();
+  }
+
+  function attachInputListeners() {
+    const table = document.getElementById('dataTable');
+    table.removeEventListener('input', updateTotals);
+    table.removeEventListener('change', updateTotals);
+    table.addEventListener('input', updateTotals);
+    table.addEventListener('change', updateTotals);
+
+    const inputs = table.querySelectorAll('input[type="number"]');
+    const colA = Array.from(table.querySelectorAll('.col-a'));
+    const colB = Array.from(table.querySelectorAll('.col-b'));
+    const colC = Array.from(table.querySelectorAll('.col-c'));
+    const columns = [colA, colB, colC];
+
+    inputs.forEach(input => {
+      input.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === 'Tab') {
+          e.preventDefault();
+
+          const currentList = 
+            input.classList.contains('col-a') ? colA :
+            input.classList.contains('col-b') ? colB : colC;
+
+          const idx = currentList.indexOf(input);
+          let nextInput;
+
+          if (idx < currentList.length - 1) {
+            nextInput = currentList[idx + 1];
+          } else {
+            const currentColIndex = columns.indexOf(currentList);
+            const nextColIndex = (currentColIndex + 1) % 3;
+            nextInput = columns[nextColIndex][0];
+          }
+
+          if (nextInput) {
+            nextInput.focus();
+            nextInput.select();
+          }
+        }
+      });
+    });
+  }
+
+  function updateTotals() {
+    let sumA = 0, sumB = 0, sumC = 0;
+
+    document.querySelectorAll('.col-a').forEach(el => sumA += (parseFloat(el.value) || 0));
+    document.querySelectorAll('.col-b').forEach(el => sumB += (parseFloat(el.value) || 0));
+    document.querySelectorAll('.col-c').forEach(el => sumC += (parseFloat(el.value) || 0));
+
+    document.getElementById('totalA').textContent = sumA.toFixed(2);
+    document.getElementById('totalB').textContent = sumB.toFixed(2);
+    document.getElementById('totalC').textContent = sumC.toFixed(2);
+
+    const waterDiff = sumA - sumB;
+    document.getElementById('waterWeight').textContent = waterDiff.toFixed(2);
+
+    const waterBox = document.getElementById('waterBox');
+    waterBox.className = 'summary-card water';
+    if (waterDiff > 0) waterBox.classList.add('positive');
+    else if (waterDiff < 0) waterBox.classList.add('negative');
+
+    document.getElementById('foodWeight').textContent = sumC.toFixed(2);
+    const foodBox = document.getElementById('foodBox');
+    foodBox.className = 'summary-card food';
+    foodBox.classList.add(sumC === 0 ? 'neutral' : 'positive');
+
+    const bags = parseFloat(bagsInput.value) || 0;
+
+    let foodPerBag = (bags > 0) ? (sumC / bags) : 0;
+    document.getElementById('foodPerBag').textContent = `Food per Bag: ${foodPerBag.toFixed(2)} g`;
+
+    let waterPerBag = (bags > 0) ? (waterDiff / bags) : 0;
+    document.getElementById('waterPerBag').textContent = `Water per Bag: ${waterPerBag.toFixed(2)} g`;
+
+    let waterOz = waterPerBag * 0.03527396;
+    document.getElementById('waterOz').textContent = `Water in oz: ${waterOz.toFixed(2)} oz`;
+  }
+
+  machineSizeSelect.addEventListener('change', function() {
+    const size = this.value;
+    const { rows: newRowCount, bags: defaultBags } = sizeConfig[size];
+
+    const prev = getCurrentValues();
+    const keepCount = Math.min(newRowCount, prev.colA.length);
+
+    const keptA = prev.colA.slice(0, keepCount);
+    const keptB = prev.colB.slice(0, keepCount);
+    const keptC = prev.colC.slice(0, keepCount);
+
+    createRows(newRowCount, keptA, keptB, keptC);
+
+    if (bagsInput.value === "" || 
+        Object.values(sizeConfig).some(cfg => String(cfg.bags) === bagsInput.value)) {
+      bagsInput.value = defaultBags;
+    }
+
+    updateTotals();
+  });
+
+  bagsInput.addEventListener('input', updateTotals);
+  bagsInput.addEventListener('change', updateTotals);
+
+  // Initial load
+  createRows(6);
+  updateTotals();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,9 @@
+body {
+    margin: 200px
+}
+
+.counter{
+    font-size: 60px;
+    font-weight: 800;
+    font-family: fantasy;
+}
